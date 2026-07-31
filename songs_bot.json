@@ -1,0 +1,210 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "8366ea94-968d-4bb2-9c6d-2340d3897d23",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        112
+      ],
+      "webhookId": "7ce28c22-2917-407b-833a-bccb2c714800",
+      "credentials": {
+        "telegramApi": {
+          "id": "oMeWKfxg0MDnVYRI",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant. Use the Google Sheets tool to retrieve songs. CRITICAL: Never send any parameters, sheet_name, range, or arguments to the Google Sheets tool. Call the tool with empty parameters {}."
+        }
+      },
+      "id": "9324fbb7-9d66-42ba-ae5d-213e4ec71f11",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        288,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "id": "b8d13fc9-f0fe-4bbb-b718-4bfac1ac7134",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        336
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ReFz2tffz3l08rjT",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+      },
+      "id": "d63a59e5-f39e-4013-ac23-246d39d8bc74",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        352,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to read songs data from Google Sheets. This tool takes NO parameters or arguments. Always call it with an empty input {}.",
+        "documentId": {
+          "__rl": true,
+          "value": "1e2ih-RU9glsRDs-YzDFvTIw4eLkmKl5ZA5Hod_n4XVo",
+          "mode": "list",
+          "cachedResultName": "Songs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e2ih-RU9glsRDs-YzDFvTIw4eLkmKl5ZA5Hod_n4XVo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e2ih-RU9glsRDs-YzDFvTIw4eLkmKl5ZA5Hod_n4XVo/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "f5411b60-63ef-4b65-a2ce-e77418e2f4cd",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        480,
+        336
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "O8ELWTcJWPbDnnpC",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "736173e4-f002-4253-ab3d-dd3174f86478",
+      "name": "Send a text message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        112
+      ],
+      "webhookId": "be7cb92a-e6e7-4381-b4cc-ee90cb37eaf3",
+      "credentials": {
+        "telegramApi": {
+          "id": "oMeWKfxg0MDnVYRI",
+          "name": "Telegram account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "16e91ab8-924a-4093-add2-a38d76cd77dc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ba16ef5d21dfe9a233f110aa4e80a284bb6fa0984ff5d70cf69aacc10f487d5f"
+  },
+  "nodeGroups": [],
+  "id": "FXibLpb49OG3nuoC",
+  "tags": []
+}
